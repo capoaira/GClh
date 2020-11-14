@@ -5132,11 +5132,61 @@ var mainGC = function() {
                 }
             }
 
+            // Show 1000
+            var oldUrl = '';
+            var newUrl = '';
+            function show1000() {
+                // Add the "Show: 1000" option.
+                if ($('#gcsel-4JnpBxk')[0] && !$('#gcsel-4JnpBxk option[value="1000"]')[0]) {
+                    var show = $('#gcsel-4JnpBxk option')[0].innerHTML.split(':')[0].trim();
+                    var selected = (document.location.search.match(/take=1000/) ? 'selected' : '');
+                    $('#gcsel-4JnpBxk').append('<option value="1000" ' + selected + '>' + show + ': 1000</option>');
+                }
+                // Load missing caches.
+                newUrl = document.location.pathname + document.location.search;
+                if (oldUrl !== newUrl && $('.geocache-code')[0]) {
+                    console.log('url change')
+                    oldUrl = newUrl;
+                    if (document.location.search.match(/take=1000/)) {
+                        console.log('add')
+                        if ($('#getAsynData')[0]) $('#getAsynData').remove();
+                        let BMCode = document.location.pathname.match(/BM[A-Z0-9]{1,6}/);
+                        let url = 'https://www.geocaching.com/plan/lists/' + BMCode
+                        url += '?sort=' + getURLParam('sort') + '&sortOrder=' + getURLParam('sortOrder') + '&skip=500&take=500';
+                        console.log(url);
+                        let requiredElement = '.geocache-table tbody tr';
+                        let handler = function(response) {
+                            window.setTimeout(function() {
+                                console.log('respnsive')
+                                let rows = $(response).find('.geocache-table tbody').html();
+                                $('.geocache-table tbody').append(rows);
+                            }, 200);
+                        }
+                        getAsynData(url, requiredElement, handler, function(){});
+                    }
+                }
+            }
+
+            function getURLParam(key) {
+                var query = window.location.search.substring(1); 
+                var pairs = query.split('&');
+               
+                for (let i=0; i<pairs.length; i++) {
+                    var pair = pairs[i].split('=');
+                    if (pair[0] == key) {
+                        if (pair[1].length > 0) return pair[1];
+                    }  
+                }
+
+                return undefined;  
+            };
+
             // Processing all steps.
             function processAll() {
                 improveLayoutHead();
                 improveLayoutBody();
                 setLinesInColorAndCorrectColspan();
+                show1000();
             }
 
             // Build mutation observer for target.
