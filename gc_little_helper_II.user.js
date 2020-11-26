@@ -7919,77 +7919,19 @@ var mainGC = function() {
             showHideNearbyEvents(0);
 
             // Set real edit link in logs in area Latest Activity.
-            // (Ich habe keinen Weg gefunden mit MutationObserver Logs beim Wechsel zwischen Community Logs und Your Logs abzugreifen.)
-            function buildLinksAF(log) {
-                if (!$(log).find('.gclh_view-link')[0]) {
-                    $(log).find('.edit-link')[0].innerHTML = 'View log';
-                    $(log).find('.edit-link').addClass('gclh_view-link');
-                }
-                if ($(log).find('.activity-type-icon > a')[0].href.match(serverParameters["user:info"].referenceCode)) {
-                    if (!$(log).find('.gclh_edit-link')[0] && $(log).find('.edit-link')[0].href.match(/coord.info\/GL/)) {
-                        var span = document.createElement('span');
-                        span.setAttribute('class', 'gclh_buttons');
-                        $(log).find('.edit-link')[0].before(span);
-                        var editLink = $( $(log).find('.edit-link')[0] ).clone()[0];
-                        var href = $(editLink).prop('href');
-                        href = href.replace(/coord.info\/GL/, 'www.geocaching.com/seek/log.aspx?code=GL');
-                        $(editLink).prop('href', href + '&edit=true').prop('class', 'gclh_edit-link').prop('style', 'margin-top: 12px').text('Edit log');
-                        $(log).find('.gclh_buttons')[0].append(editLink);
-                        var editLink = $( $(log).find('.edit-link')[0] ).clone()[0];
-                        $(log).find('.edit-link')[0].remove();
-                        $(log).find('.gclh_buttons')[0].append(editLink);
-                    }
-                    buildEventMoreAF(log);
-                }
-            }
-            function buildLinksWaitAF(log, waitCount) {
-                buildLinksAF(log);
-                waitCount++; if (waitCount <= 50) setTimeout(function(){buildLinksWaitAF(log, waitCount);}, 100);
-            }
-            function buildEventMoreAF(log) {
-                if (!$(log).find('.activity-details').hasClass('gclh_event')) {
-                    $(log).find('.activity-details')[0].addEventListener("click", function(){buildLinksWaitAF($(this).closest('.activity-item'), 0);}, false);
-                    $($(log).find('.activity-details')[0]).addClass('gclh_event');
-                }
-            }
-            function processLogsAF(waitCount) {
-                if ($('#ActivityFeed .activity-item').length > 0) {
-                    for (i=0; i<$('#ActivityFeed .activity-item').length; i++) {
-                        if ($($('#ActivityFeed .activity-item')[i]).find('.activity-type-icon > a')[0].href.match(serverParameters["user:info"].referenceCode)) {
-                            buildEventMoreAF($('#ActivityFeed .activity-item')[i]);
-                        }
-                    }
-                }
-                waitCount++; if (waitCount <= 25) setTimeout(function(){processLogsAF(waitCount);}, 200);
-            }
-            function buildEventQtipAF(waitCount) {
-                if ($('#ActivityFeed .btn-settings')[0] && $('#ActivityFeed .btn-settings').attr('data-hasqtip') && $('#qtip-' + $('#ActivityFeed .btn-settings').attr('data-hasqtip') + '-content')[0] && !$( $('#qtip-' + $('#ActivityFeed .btn-settings').attr('data-hasqtip') + '-content')[0] ).hasClass('gclh_event')) {
-                    var qtip = $('#qtip-' + $('#ActivityFeed .btn-settings').attr('data-hasqtip') + '-content');
-                    qtip[0].addEventListener("click", function(){startAF();}, false);
-                    $(qtip[0]).addClass('gclh_event');
-                } else {waitCount++; if (waitCount <= 100) setTimeout(function(){buildEventQtipAF(waitCount);}, 50);}
-            }
-            function buildEventLatestActivityAF(waitCount) {
-                if ($('#ActivityFeed .btn-settings')[0] && !$($('#ActivityFeed .btn-settings')[0]).hasClass('gclh_event')) {
-                    $('#ActivityFeed .btn-settings')[0].addEventListener("click", function(){buildEventQtipAF(0);}, false);
-                    $($('#ActivityFeed .btn-settings')[0]).addClass('gclh_event');
-                } else {waitCount++; if (waitCount <= 100) setTimeout(function(){buildEventLatestActivityAF(waitCount);}, 50);}
-            }
-            function buildEventLatestActivityPanelAF(waitCount) {
-                if ($('#ActivityFeed .panel-header')[0] && !$($('#ActivityFeed .panel-header')[0]).hasClass('gclh_event')) {
-                    $('#ActivityFeed .panel-header')[0].addEventListener("click", function(){startAF();}, false);
-                    $($('#ActivityFeed .panel-header')[0]).addClass('gclh_event');
-                } else {waitCount++; if (waitCount <= 100) setTimeout(function(){buildEventLatestActivityPanelAF(waitCount);}, 50);}
-            }
-            function startAF() {
-                buildEventLatestActivityPanelAF(0);
-                buildEventLatestActivityAF(0);
-                processLogsAF(0);
-            }
             if (settings_show_edit_links_for_logs) {
-                startAF();
-                css += '.gclh_buttons {display: flex;}';
-                css += '.gclh_edit-link {margin-top: 12px; margin-right: 12px;}';
+                var tpl = $('#ActivityItemTpl').html();
+                var startPos = tpl.indexOf('{{#if hasEditLink}}')+'{{#if hasEditLink}}'.length;
+                var pos = tpl.indexOf('{{/if}}', startPos); // The endPos is the second '{{/if}}', so we need a extra variable
+                var endPos = tpl.indexOf('{{/if}}', pos+4);
+                var oldTpl = tpl.substring(startPos, endPos);
+                console.log(oldTpl)
+                var newTpl  = '<span class="meta-data">';
+                    newTpl += '  {{#if isYou}}<a href="{{links.edit}}?edit=true">Edit log</a><span class="gclh-separator">|</span>{{/if}}';
+                    newTpl += '  <a href="{{links.edit}}">View log page</a>'
+                    newTpl += '</span>';
+                $('#ActivityItemTpl').html(tpl.replace(oldTpl, newTpl));
+                css += '.gclh-separator {margin: 0 5px;}';
             }
             appendCssStyle(css);
 
