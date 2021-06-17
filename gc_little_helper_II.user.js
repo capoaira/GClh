@@ -1441,6 +1441,11 @@ var mainGC = function() {
                         }, 1);
                     }
                     takeMenuLists(0);
+
+                    // Remove Play, Community and/or Shop from navigation
+                    if (remove_navi_play) $('.gc-menu li')[0].style.display = 'none';
+                    if (remove_navi_community) $('.gc-menu li')[1].style.display = 'none';
+                    if (remove_navi_shop) $('.gc-menu li')[2].style.display = 'none';
                 } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForHeader(waitCount);}, 50);}
             } catch(e) {gclh_error("Improve the header", e);}
         }
@@ -1706,23 +1711,6 @@ var mainGC = function() {
                 appendCssStyle(css);
             }
         } catch(e) {gclh_error("New width",e);}
-    }
-
-// Remove GC Menüs.
-    function removeGCMenues() {
-        try {
-            var m = $('ul.(Menu|menu) li a.dropdown');
-            for (var i = 0; i < m.length; i++) {
-                if ((m[i].href.match(/\/play\/search/) && getValue('remove_navi_play')) ||
-                    (m[i].href.match(/\/forums\/$/) && getValue('remove_navi_community')) ||
-                    (m[i].href.match(/shop\.geocaching\.com/) && getValue('remove_navi_shop'))) {
-                    m[i].parentNode.remove();
-                }
-                if (m[i].href.match(/\/play\/search/) || m[i].href.match(/\/forums\/$/) || m[i].href.match(/shop\.geocaching\.com/)) {
-                    m[i].href = '#';
-                }
-            }
-        } catch(e) {gclh_error("Remove GC Menüs",e);}
     }
 
 // Linklist on top.
