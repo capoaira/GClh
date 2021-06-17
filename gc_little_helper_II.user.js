@@ -1416,6 +1416,7 @@ var mainGC = function() {
 // Wait for header and build up header.
     tlc('START buildUpHeader');
     try {
+<<<<<<< refs/remotes/upstream/master
         function buildUpHeader(waitCount) {
             if ($('#gc-header, #GCHeader')[0]) {
                 tlc('Header found');
@@ -1459,10 +1460,19 @@ var mainGC = function() {
                 if (waitCount <= 1000) {setTimeout(function(){buildUpHeader(waitCount);}, 10);}
                 else {tlc('STOP No header found');}
             }
+=======
+        function waitForHeader(waitCount) {
+            try {
+                if ($('#gc-header')[0]) {
+
+                } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForHeader(waitCount);}, 50);}
+            } catch(e) {gclh_error("Improve the header", e);}
+>>>>>>> remove old header code
         }
-        buildUpHeader(0);
+        waitForHeader(0);
     } catch(e) {gclh_error("Wait for header and build up header",e);}
 
+// xxxx HEADER START
 // Set user avatar, user and found count in new header.
     function setUserParameter() {
         if ($('#ctl00_uxLoginStatus_hlHeaderAvatar')[0]) $('#ctl00_uxLoginStatus_hlHeaderAvatar')[0].src = global_avatarUrl;
@@ -1966,6 +1976,7 @@ var mainGC = function() {
             } catch(e) {gclh_error("Show draft indicator in header",e);}
         }
     }
+// xxxx HEADER END!!!
 
 // Collection of css for cache listings.
     if (is_page("cache_listing")) {
