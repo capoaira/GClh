@@ -24,7 +24,7 @@
 // @require      https://www.geocaching.com/scripts/MarkdownDeepLib.min.js
 // @require      https://www.geocaching.com/scripts/SmileyConverter.js
 //xxxx
-// @resource maincss https://raw.githubusercontent.com/2Abendsegler/GClh/collector/data/main.css
+// @resource maincss https://raw.githubusercontent.com/capoaira/GClh/header/data/main.css
 //xxxx
 // @resource headerhtml https://raw.githubusercontent.com/2Abendsegler/GClh/collector/data/header.html
 // @resource jscolor https://raw.githubusercontent.com/2Abendsegler/GClh/master/data/jscolor.js
@@ -1414,7 +1414,32 @@ var mainGC = function() {
         function waitForHeader(waitCount) {
             try {
                 if ($('#gc-header')[0]) {
-
+                    // The CSS needs to run before the rest of the code.
+                    let css = '';
+                    // Hover for dropdown lists.
+                    css += '.dropdown-menu {display:none !important;}'; // Hide the asyc loaded list 
+                    css += '.dropdown-toggle:hover + .dropdown-menu, .dropdown-menu:hover {display: block !important;}'; // Build the hover function
+                    css += '#gc-header button {padding: 4px 8px;padding: 28px 8px;}'; // Um den Übergang von Button zu Liste  ...
+                    css += '#gc-header .dropdown-menu {margin-top: 24px;}'; // ... zu erleichtern wird hier ein padding hinzugefügt.
+                    appendCssStyle(css);
+            
+                    // Change the Dropdown.
+                    let $dropdowns = $('.gc-menu > li');
+                    function takeMenuLists(i) {
+                        let $dropdown = $dropdowns[i];
+                        let $button = $($dropdown).find('button');
+                        // Click the button to save the lists.
+                        $button.click();
+                        window.setTimeout(function() {
+                            let list = '<ul class="dropdown-menu">' + $('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html() + '</ul>';
+                            $button.after(list);
+                            // Replace the button with a Button without an event.
+                            $button.after('<button class="dropdown-toggle">' + $button.html() + '</button>');
+                            $button.css('display', 'none');
+                            if (i < $dropdowns.length-1) takeMenuLists(i+1);
+                        }, 1);
+                    }
+                    takeMenuLists(0);
                 } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForHeader(waitCount);}, 50);}
             } catch(e) {gclh_error("Improve the header", e);}
         }
@@ -1799,25 +1824,7 @@ var mainGC = function() {
                     }
                 }
             }
-            // Hover für alle Dropdowns aufbauen, auch für die von GS.
-            if ($('.Menu, .menu').length > 0) {
-                buildHover();
-            }
         } catch(e) {gclh_error("Linklist on top",e);}
-    }
-    // Hover aufbauen. Muss nach Menüaufbau erfolgen.
-    function buildHover() {
-        $('ul.Menu, ul.menu').children().hover(function() {
-                $(this).addClass('hover');
-                $(this).addClass('open');
-                $('ul:first', this).css('visibility', 'visible');
-            },
-            function() {
-                $(this).removeClass('hover');
-                $(this).removeClass('open');
-                $('ul:first', this).css('visibility', 'hidden');
-            }
-        );
     }
 
 // Aufbau Links zum Aufruf von Config, Sync und Find Player aus Linklist (1. Schritt).
