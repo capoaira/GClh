@@ -1,26 +1,4 @@
-/* Make GC header invisible. */
-#gc-header, 
-#GCHeader, 
-#gc-mobile-nav {
-    display: none;
-}
-
-/* Part of core css of GS. All nav changed in gclh_nav. */
-gclh_nav {
-    display: block;
-}
-gclh_nav {
-    min-width: 1030px;
-}
-gclh_nav {
-    flex-shrink: 0;
-}
-gclh_nav,
-gclh_nav * {
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-}
+/* Part of core css of GS */
 .logo {
     color: #fff;
     fill: currentColor;
@@ -42,39 +20,6 @@ gclh_nav * {
     clip: rect(29px,196px,58px,0);
     height: auto;
     margin-top: -29px;
-}
-gclh_nav {
-    align-items: center;
-    background-color: #02874d;
-    font-size: 14px;
-    height: 80px;
-    position: static;
-    right: 0;
-    top: 0;
-    width: 100%;
-}
-gclh_nav .wrapper {
-    align-items: center;
-    background-color: #02874d;
-    display: flex;
-    flex-direction: row;
-    margin: 0 auto;
-    min-width: 990px;
-    max-width: 1300px;
-    position: relative;
-    height: 100%;
-    padding-left: 32px;
-    padding-right: 32px;
-    width: 100%;
-}
-gclh_nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-gclh_nav ul {
-    list-style: none;
-    list-style-image: none;
 }
 .menu {
     align-items: center;
@@ -192,24 +137,6 @@ gclh_nav ul {
 }
 .menu>li .dropdown:focus {
     color: #fff;
-}
-gclh_nav .profile-panel,
-.logged-out-user {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    height: auto;
-    margin-left: auto;
-    padding: 0;
-    position: initial;
-    width: auto;
-    background-color: #02874d;
-    color: #fff;
-    order: 1;
-}
-gclh_nav .profile-panel a {
-    color: #fff;
-    text-decoration: none;
 }
 .profile-panel>li {
     height: 40px;
@@ -349,30 +276,13 @@ gclh_nav .profile-panel a {
 .profile-panel .li-user-toggle:focus {
     background: #fff;
 }
-gclh_nav .profile-panel ul {
-    display: none;
-    margin-left: 0;
-    right: -.5em;
-    top: 3.6em;
-}
 .profile-panel .submenu.user-expanded {
     display: block;
-}
-gclh_nav .profile-panel .submenu a,
-.profile-panel .submenu button {
-    color: #4a4a4a;
-}
-gclh_nav .profile-panel .submenu button {
-    width: 100%;
 }
 .submenu button {
     background: none;
     border: 0;
     cursor: pointer;
-}
-gclh_nav .profile-panel ul::after {
-    left: initial;
-    right: 14px;
 }
 
 /* User profile menu bend into shape. */
