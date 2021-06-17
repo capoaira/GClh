@@ -1420,7 +1420,8 @@ var mainGC = function() {
                     css += '.dropdown-menu {display:none !important;}'; // Hide the asyc loaded list 
                     css += '.dropdown-toggle:hover + .dropdown-menu, .dropdown-menu:hover {display: block !important;}'; // Build the hover function
                     css += '#gc-header button {padding: 4px 8px;padding: 28px 8px;}'; // Um den Übergang von Button zu Liste  ...
-                    css += '#gc-header .dropdown-menu {margin-top: 24px;}'; // ... zu erleichtern wird hier ein padding hinzugefügt.
+                    css += '#gc-header .dropdown-menu {margin-top: 24px;}'; // ... zu erleichtern wird hier ein padding hinzugefügt ...
+                    css += '#gc-header .gc-menu a:focus, #gc-header .gc-menu button:focus {border: none;}'; // ... remove focus style
                     appendCssStyle(css);
             
                     // Change the Dropdown.
