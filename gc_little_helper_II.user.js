@@ -1411,51 +1411,17 @@ var mainGC = function() {
 // Wait for header and build up header.
     tlc('START buildUpHeader');
     try {
-        function buildUpHeader(waitCount) {
-            if ($('#gc-header, #GCHeader')[0]) {
-                tlc('Header found');
-                // Integrate old header.
-                ($('#gc-header') || $('#GCHeader')).after(header_old);
-                // Run header relevant features.
-                tlc('START setUserParameter');
-                setUserParameter();
-                tlc('START setMessageIndicator');
-                setMessageIndicator(0);
-                tlc('START changeHeaderLayout');
-                changeHeaderLayout();
-                tlc('START newWidth');
-                newWidth();
-                tlc('START removeGCMenues');
-                removeGCMenues();
-                tlc('START linklistOnTop');
-                linklistOnTop();
-                tlc('START buildSpecialLinklistLinks');
-                buildSpecialLinklistLinks();
-                tlc('START runAfterRedirect');
-                runAfterRedirect();
-                tlc('START showDraftIndicatorInHeader');
-                showDraftIndicatorInHeader();
-                // User profile menu bend into shape.
-                tlc('START User profile');
-                $('#ctl00_uxLoginStatus_divSignedIn button.li-user-toggle')[0].addEventListener('click', function(){
-                    $('#ctl00_uxLoginStatus_divSignedIn li.li-user:not(#pgc_gclh)').toggleClass('gclh_open');
-                });
-                // Disable user profile menu by clicking anywhere else.
-                $(document).click(function(){
-                    if (!$(this)[0].activeElement.className.match(/li-user-toggle/)) {
-                        $('#ctl00_uxLoginStatus_divSignedIn li.li-user').removeClass('gclh_open');
-                    }
-                });
-                tlc('START OK');
-            } else {
-                waitCount++;
-                if (waitCount <= 1000) {setTimeout(function(){buildUpHeader(waitCount);}, 10);}
-                else {tlc('STOP No header found');}
-            }
+        function waitForHeader(waitCount) {
+            try {
+                if ($('#gc-header')[0]) {
+
+                } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForHeader(waitCount);}, 50);}
+            } catch(e) {gclh_error("Improve the header", e);}
         }
-        buildUpHeader(0);
+        waitForHeader(0);
     } catch(e) {gclh_error("Wait for header and build up header",e);}
 
+// xxxx HEADER START
 // Set user avatar, user and found count in new header.
     function setUserParameter() {
         if ($('#ctl00_uxLoginStatus_hlHeaderAvatar')[0]) $('#ctl00_uxLoginStatus_hlHeaderAvatar')[0].src = global_avatarUrl;
@@ -1931,6 +1897,7 @@ var mainGC = function() {
             } catch(e) {gclh_error("Show draft indicator in header",e);}
         }
     }
+// xxxx HEADER END!!!
 
 // Collection of css for cache listings.
     if (is_page("cache_listing")) {
