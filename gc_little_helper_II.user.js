@@ -1447,14 +1447,18 @@ var mainGC = function() {
                         let $button = $($dropdown).find('button');
                         // Click the button to save the lists.
                         $button.click();
-                        window.setTimeout(function() {
-                            let list = '<ul class="dropdown-menu">' + $('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html() + '</ul>';
-                            $button.after(list);
-                            // Replace the button with a Button without an event.
-                            $button.after('<button class="dropdown-toggle">' + $button.html() + '</button>');
-                            $button.css('display', 'none');
-                            if (i < $dropdowns.length-1) takeMenuLists(i+1);
-                        }, 1);
+                        function waitForList(waitCount) {
+                            $button.click();
+                            if ($('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html()) {
+                                let list = '<ul class="dropdown-menu">' + $('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html() + '</ul>';
+                                $button.after(list);
+                                // Replace the button with a Button without an event.
+                                $button.after('<button class="dropdown-toggle">' + $button.html() + '</button>');
+                                $button.css('display', 'none');
+                                if (i < $dropdowns.length-1) takeMenuLists(i+1);
+                            } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForList(waitCount);}, 50);}
+                        }
+                        waitForList(0)
                     }
                     takeMenuLists(0);
 
