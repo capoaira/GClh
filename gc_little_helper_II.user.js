@@ -1438,6 +1438,8 @@ var mainGC = function() {
                     css += '#gc-header button {padding: 4px 8px;padding: 28px 8px;}'; // Um den Übergang von Button zu Liste  ...
                     css += '#gc-header .dropdown-menu {margin-top: 24px;}'; // ... zu erleichtern wird hier ein padding hinzugefügt ...
                     css += '#gc-header .gc-menu a:focus, #gc-header .gc-menu button:focus {border: none;}'; // ... remove focus style
+                    // Search field.
+                    css += '#gclh_searchfield {margin-left: 32px !important}';
                     appendCssStyle(css);
             
                     // Change the Dropdown.
@@ -1449,7 +1451,7 @@ var mainGC = function() {
                         $button.click();
                         function waitForList(waitCount) {
                             $button.click();
-                            if ($('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html()) {
+                            if ($button.attr('class') && $('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html()) {
                                 let list = '<ul class="dropdown-menu">' + $('.menu-'+$button.attr('class').match(/toggle-([A-Z]+)/)[1]).html() + '</ul>';
                                 $button.after(list);
                                 // Replace the button with a Button without an event.
@@ -1462,37 +1464,133 @@ var mainGC = function() {
                     }
                     takeMenuLists(0);
 
-                    // Remove Play, Community and/or Shop from navigation
-                    if (remove_navi_play) $('.gc-menu li')[0].style.display = 'none';
-                    if (remove_navi_community) $('.gc-menu li')[1].style.display = 'none';
-                    if (remove_navi_shop) $('.gc-menu li')[2].style.display = 'none';
+                    // Remove Play, Community and/or Shop from navigation.
+                    if (remove_navi_play) $('.gc-menu > li')[0].style.display = 'none';
+                    if (remove_navi_community) $('.gc-menu > li')[1].style.display = 'none';
+                    if (remove_navi_shop) $('.gc-menu > li')[2].style.display = 'none';
+
+                    // Show Linklist on top.
+                    // Replace {me} and apostrophes in bookmarks.
+                    for (var i = 0; i < bookmarks.length; i++) {
+                        if (bookmarks[i]['href'].match('{me}') && global_me && global_me != "") {
+                            bookmarks[i]['href'] = bookmarks[i]['href'].replace('{me}', global_me);
+                        }
+                    }
+                    if (settings_bookmarks_on_top && $('.gc-menu li')[0]) {
+                        if (settings_bookmarks_top_menu || settings_change_header_layout == false) {  // Navi vertikal
+                            $('.gc-menu').append('<li id="gclh_linklist"><button class="dropdown-toggle">Linklist</button><ul class="dropdown-menu"></ul></li>');
+                            for (var i = 0; i < settings_bookmarks_list.length; i++) {
+                                var x = settings_bookmarks_list[i];
+                                if (typeof(x) == "undefined" || x == "" || typeof(x) == "object") continue;
+                                var sublink = document.createElement("li");
+                                var hyperlink = document.createElement("a");
+                                for (attr in bookmarks[x]) {
+                                    if (attr != "custom" && attr != "title") hyperlink.setAttribute(attr, bookmarks[x][attr]);
+                                }
+                                if (bookmarks[x]['href'].match(/^([#\s]*)$/)) {
+                                    hyperlink.setAttribute('class', 'noLink');
+                                    sublink.setAttribute('class', 'noLink');
+                                }
+                                hyperlink.appendChild(document.createTextNode(bookmarks[x]['title']));
+                                sublink.appendChild(hyperlink);
+                                $('#gclh_linklist ul')[0].appendChild(sublink);
+                            }
+                        } /*else {  // Navi horizontal
+                            for (var i = 0; i < settings_bookmarks_list.length; i++) {
+                                var x = settings_bookmarks_list[i];
+                                if (typeof(x) == "undefined" || x == "" || typeof(x) == "object") continue;
+                                var sublink = document.createElement("li");
+                                var hyperlink = document.createElement("a");
+                                for (attr in bookmarks[x]) {
+                                    if (attr != "custom" && attr != "title") hyperlink.setAttribute(attr, bookmarks[x][attr]);
+                                }
+                                hyperlink.appendChild(document.createTextNode(bookmarks[x]['title']));
+                                sublink.appendChild(hyperlink);
+                                nav_list.appendChild(sublink);
+                            }
+                        }*/
+
+                        // GClh Config, Sync und Find Player Aufrufe aus Linklist heraus.
+                        if (checkTaskAllowed('Config', false) == true && document.getElementsByName("lnk_gclhconfig")[0]) {
+                            document.getElementsByName("lnk_gclhconfig")[0].href = "#GClhShowConfig";
+                            document.getElementsByName("lnk_gclhconfig")[0].addEventListener('click', gclh_showConfig, false);
+                        }
+                        if (checkTaskAllowed('Sync', false) == true && document.getElementsByName("lnk_gclhsync")[0]) {
+                            document.getElementsByName("lnk_gclhsync")[0].href = "#GClhShowSync";
+                            document.getElementsByName("lnk_gclhsync")[0].addEventListener('click', gclh_showSync, false);
+                        }
+                        if (checkTaskAllowed("Find Player", false) == true && document.getElementsByName("lnk_findplayer")[0]) {
+                            document.getElementsByName("lnk_findplayer")[0].href = "#GClhShowFindPlayer";
+                            document.getElementsByName("lnk_findplayer")[0].addEventListener('click', createFindPlayerForm, false);
+                        }
+
+                        // Search field.
+                        if (settings_bookmarks_search) {
+                            var code = "function gclh_search_logs(){";
+                            code += "  var search = document.getElementById('navi_search').value.trim();";
+                            code += "  if (search.match(/^(GC|TB|GT|PR|BM|GL)[A-Z0-9]{1,10}\\b/i)) document.location.href = 'https://coord.info/'+search;";
+                            code += "  else if (search.match(/^[A-Z0-9]{6}\\b$/i)) document.location.href = '/track/details.aspx?tracker='+search;";
+                            code += "  else document.location.href = '/seek/nearest.aspx?navi_search='+search;";
+                            code += "}";
+                            injectPageScript(code, "body");
+                            var searchfield = "<li id='gclh_searchfield'><input onKeyDown='if (event.keyCode==13 && event.ctrlKey == false && event.altKey == false && event.shiftKey == false) {gclh_search_logs(); return false;}' type='text' size='7' name='navi_search' id='navi_search' style='margin-bottom: -1px; padding: 1px; font-weight: bold; font-family: sans-serif; border-radius: 7px 7px 7px 7px;' value='" + settings_bookmarks_search_default + "'></li>";
+                            $('.gc-menu').append(searchfield);
+                        }
+        
+                        if (settings_menu_show_separator) {
+                            if (settings_bookmarks_top_menu || settings_change_header_layout == false);  // Navi vertikal
+                            /*else {  // Navi horizontal
+                                var menuChilds = $('ul.Menu, ul.menu')[0].children;
+                                for (var i = 1; i < menuChilds.length; i += 2) {
+                                    var separator = document.createElement("li");
+                                    separator.appendChild(document.createTextNode("|"));
+                                    menuChilds[i].parentNode.insertBefore(separator, menuChilds[i]);
+                                }
+                            }*/
+                        }
+                        // Vertikale Menüs rechts ausrichten.
+                        if (settings_bookmarks_top_menu && settings_menu_float_right && settings_change_header_layout) {
+                            if ($('ul.Menu, ul.menu')[0]) {
+                                var menu = $('ul.Menu, ul.menu')[0];
+                                var menuChilds = $('ul.Menu, ul.menu')[0].children;
+                                for (var i = 0; i < menuChilds.length; i++) {
+                                    var child = menu.removeChild(menu.children[menuChilds.length-1-i]);
+                                    child.setAttribute("style", "float: right;");
+                                    menu.appendChild(child);
+                                }
+                            }
+                        }
+                    }
+
+                    // Show draft indicator in header.
+                    if (settings_show_draft_indicator) {
+                        try {
+                            $.get('https://www.geocaching.com/account/dashboard', null, function(text) {
+                                // Look for drafts in old layout.
+                                draft_list = $(text).find('#uxDraftLogs span');
+                                if (draft_list != null) drafts = draft_list[0];
+                                else drafts = false;
+                                if (!drafts) {
+                                    // If not found, Look for drafts in new layout.
+                                    draft_list = $(text).find("nav a[href='/my/fieldnotes.aspx']");
+                                    if (draft_list != null) drafts = draft_list[0];
+                                    else drafts = false;
+                                }
+                                if (drafts) {
+                                    draft_count = parseInt(drafts.innerHTML.match(/\d+/));
+                                    if (Number.isInteger(draft_count) && draft_count > 0) {
+                                        $('.player-profile').prepend('<span class="draft-indicator"><a href="/my/fieldnotes.aspx" title="Go to Drafts">' + draft_count + '</a></span>');
+                                    }
+                                }
+                            });
+                        } catch(e) {gclh_error("Show draft indicator in header",e);}
+                    }
+                    
                 } else {waitCount++; if (waitCount <= 200) setTimeout(function(){waitForHeader(waitCount);}, 50);}
             } catch(e) {gclh_error("Improve the header", e);}
         }
         waitForHeader(0);
     } catch(e) {gclh_error("Wait for header and build up header",e);}
-
-// xxxx HEADER START
-// Set user avatar, user and found count in new header.
-    function setUserParameter() {
-        if ($('#ctl00_uxLoginStatus_hlHeaderAvatar')[0]) $('#ctl00_uxLoginStatus_hlHeaderAvatar')[0].src = global_avatarUrl;
-        if ($('.li-user-info .user-name')[0]) $('.li-user-info .user-name')[0].innerHTML = global_me;
-        if ($('.li-user-info .cache-count')[0]) $('.li-user-info .cache-count')[0].innerHTML = global_findCount + ' Finds';
-    }
-
-// Set message center message indicator.
-    function setMessageIndicator(waitCount) {
-        if ($('.message-center i')[0] && $('.gclh_message-center')[0]) {
-            $('.gclh_message-center svg').before('<span class="gclh_message-indicator" title="Message indicator"> </span>');
-        } else {waitCount++; if (waitCount <= 20) setTimeout(function(){setMessageIndicator(waitCount);}, 500);}
-    }
-
-// Set upgrade button.
-    function setUpgradeButton() {
-        if (global_isBasic && !settings_upgrade_button_header_remove) {
-            $('.messagecenterheaderwidget.li-messages').before('<li><a class="cta-upgrade desktop-upgrade-cta" data-event-action="Header Click" data-event-category="data" data-event-label="Upgrade CTA" href="https://payments.geocaching.com//?upgrade=true" title="Upgrade">Upgrade</a></li>');
-        }
-    }
 
 // Change Header layout.
     function changeHeaderLayout() {
@@ -1737,128 +1835,6 @@ var mainGC = function() {
         } catch(e) {gclh_error("New width",e);}
     }
 
-// Linklist on top.
-    function linklistOnTop() {
-        try {
-            // Replace {me} and apostrophes in bookmarks.
-            for (var i = 0; i < bookmarks.length; i++) {
-                if (bookmarks[i]['href'].match('{me}') && global_me && global_me != "") {
-                    bookmarks[i]['href'] = bookmarks[i]['href'].replace('{me}', global_me);
-                }
-            }
-            // Auch ohne Change Header Layout zwischen Menüname und Submenü keine Lücke lassen, sonst klappts nicht mit einfachem Aufklappen.
-            if (!settings_change_header_layout) {
-                if (is_page("map")) {
-                    appendCssStyle(".menu > li, .Menu > li {height: 100%; padding-top: 2.0em;} .submenu, .SubMenu {margin-top: 1.9em;}");
-                } else if (is_page("find_cache") || is_page("hide_cache") || is_page("collection_1") || is_page("geotours") || is_page("dashboard-section") || is_page("track")) {
-                    appendCssStyle(".menu > li, .Menu > li {height: 100%; padding-top: 2.1em;} .submenu, .SubMenu {margin-top: 2.0em;}");
-                } else {
-                    appendCssStyle(".menu > li, .Menu > li {height: 100%; padding-top: 2.0em;} .submenu, .SubMenu {margin-top: 2.0em;}");
-                }
-            }
-            if (settings_bookmarks_on_top && $('.Menu, .menu').length > 0) {
-                var nav_list = $('.Menu, .menu')[0];
-                var menu = document.createElement("li");
-                var headline = document.createElement("a");
-                if (settings_bookmarks_top_menu || settings_change_header_layout == false) {  // Navi vertikal
-                    headline.setAttribute("href", "#");
-                    headline.setAttribute("class", "Dropdown dropdown");
-                    headline.setAttribute("accesskey", "7");
-                    headline.innerHTML = "Linklist";
-                    menu.appendChild(headline);
-                    var submenu = document.createElement("ul");
-                    $(submenu).addClass("SubMenu").addClass("submenu");
-                    menu.appendChild(submenu);
-                    for (var i = 0; i < settings_bookmarks_list.length; i++) {
-                        var x = settings_bookmarks_list[i];
-                        if (typeof(x) == "undefined" || x == "" || typeof(x) == "object") continue;
-                        var sublink = document.createElement("li");
-                        var hyperlink = document.createElement("a");
-                        for (attr in bookmarks[x]) {
-                            if (attr != "custom" && attr != "title") hyperlink.setAttribute(attr, bookmarks[x][attr]);
-                        }
-                        if (bookmarks[x]['href'].match(/^([#\s]*)$/)) {
-                            hyperlink.setAttribute('class', 'noLink');
-                            sublink.setAttribute('class', 'noLink');
-                        }
-                        hyperlink.appendChild(document.createTextNode(bookmarks[x]['title']));
-                        sublink.appendChild(hyperlink);
-                        submenu.appendChild(sublink);
-                    }
-                    nav_list.appendChild(menu);
-                } else {  // Navi horizontal
-                    for (var i = 0; i < settings_bookmarks_list.length; i++) {
-                        var x = settings_bookmarks_list[i];
-                        if (typeof(x) == "undefined" || x == "" || typeof(x) == "object") continue;
-                        var sublink = document.createElement("li");
-                        var hyperlink = document.createElement("a");
-                        for (attr in bookmarks[x]) {
-                            if (attr != "custom" && attr != "title") hyperlink.setAttribute(attr, bookmarks[x][attr]);
-                        }
-                        hyperlink.appendChild(document.createTextNode(bookmarks[x]['title']));
-                        sublink.appendChild(hyperlink);
-                        nav_list.appendChild(sublink);
-                    }
-                }
-                // Search field.
-                if (settings_bookmarks_search) {
-                    var code = "function gclh_search_logs(){";
-                    code += "  var search = document.getElementById('navi_search').value.trim();";
-                    code += "  if (search.match(/^(GC|TB|GT|PR|BM|GL)[A-Z0-9]{1,10}\\b/i)) document.location.href = 'https://coord.info/'+search;";
-                    code += "  else if (search.match(/^[A-Z0-9]{6}\\b$/i)) document.location.href = '/track/details.aspx?tracker='+search;";
-                    code += "  else document.location.href = '/seek/nearest.aspx?navi_search='+search;";
-                    code += "}";
-                    injectPageScript(code, "body");
-                    var searchfield = "<li><input onKeyDown='if (event.keyCode==13 && event.ctrlKey == false && event.altKey == false && event.shiftKey == false) {gclh_search_logs(); return false;}' type='text' size='7' name='navi_search' id='navi_search' style='margin-bottom: -1px; padding: 1px; font-weight: bold; font-family: sans-serif; border-radius: 7px 7px 7px 7px;' value='" + settings_bookmarks_search_default + "'></li>";
-                    $(".Menu, .menu").append(searchfield);
-                }
-
-                if (settings_menu_show_separator) {
-                    if (settings_bookmarks_top_menu || settings_change_header_layout == false);  // Navi vertikal
-                    else {  // Navi horizontal
-                        var menuChilds = $('ul.Menu, ul.menu')[0].children;
-                        for (var i = 1; i < menuChilds.length; i += 2) {
-                            var separator = document.createElement("li");
-                            separator.appendChild(document.createTextNode("|"));
-                            menuChilds[i].parentNode.insertBefore(separator, menuChilds[i]);
-                        }
-                    }
-                }
-                // Vertikale Menüs rechts ausrichten.
-                if (settings_bookmarks_top_menu && settings_menu_float_right && settings_change_header_layout) {
-                    if ($('ul.Menu, ul.menu')[0]) {
-                        var menu = $('ul.Menu, ul.menu')[0];
-                        var menuChilds = $('ul.Menu, ul.menu')[0].children;
-                        for (var i = 0; i < menuChilds.length; i++) {
-                            var child = menu.removeChild(menu.children[menuChilds.length-1-i]);
-                            child.setAttribute("style", "float: right;");
-                            menu.appendChild(child);
-                        }
-                    }
-                }
-            }
-        } catch(e) {gclh_error("Linklist on top",e);}
-    }
-
-// Aufbau Links zum Aufruf von Config, Sync und Find Player aus Linklist (1. Schritt).
-    function buildSpecialLinklistLinks() {
-        try {
-            // GClh Config, Sync und Find Player Aufrufe aus Linklist heraus.
-            if (checkTaskAllowed('Config', false) == true && document.getElementsByName("lnk_gclhconfig")[0]) {
-                document.getElementsByName("lnk_gclhconfig")[0].href = "#GClhShowConfig";
-                document.getElementsByName("lnk_gclhconfig")[0].addEventListener('click', gclh_showConfig, false);
-            }
-            if (checkTaskAllowed('Sync', false) == true && document.getElementsByName("lnk_gclhsync")[0]) {
-                document.getElementsByName("lnk_gclhsync")[0].href = "#GClhShowSync";
-                document.getElementsByName("lnk_gclhsync")[0].addEventListener('click', gclh_showSync, false);
-            }
-            if (checkTaskAllowed("Find Player", false) == true && document.getElementsByName("lnk_findplayer")[0]) {
-                document.getElementsByName("lnk_findplayer")[0].href = "#GClhShowFindPlayer";
-                document.getElementsByName("lnk_findplayer")[0].addEventListener('click', createFindPlayerForm, false);
-            }
-        } catch(e) {gclh_error("Aufbau Links zum Aufruf von Config, Sync und Find Player aus Linklist (1. Schritt)",e);}
-    }
-
 // Special Links aus Linklist bzw. Default Links versorgen.
     function setSpecialLinks() {
         try {
@@ -1886,6 +1862,7 @@ var mainGC = function() {
         if (document.getElementsByName(lnk)[0]) document.getElementsByName(lnk)[0].href = link;
         if (document.getElementsByName(lnk)[1]) document.getElementsByName(lnk)[1].href = link;
     }
+
 
 // Run after redirect.
     function runAfterRedirect() {
@@ -1919,33 +1896,6 @@ var mainGC = function() {
             }
         } catch(e) {gclh_error("Run after redirect",e);}
     }
-
-// Show draft indicator in header.
-    function showDraftIndicatorInHeader() {
-        if (settings_show_draft_indicator) {
-            try {
-                $.get('https://www.geocaching.com/account/dashboard', null, function(text) {
-                    // Look for drafts in old layout.
-                    draft_list = $(text).find('#uxDraftLogs span');
-                    if (draft_list != null) drafts = draft_list[0];
-                    else drafts = false;
-                    if (!drafts) {
-                        // If not found, Look for drafts in new layout.
-                        draft_list = $(text).find("nav a[href='/my/fieldnotes.aspx']");
-                        if (draft_list != null) drafts = draft_list[0];
-                        else drafts = false;
-                    }
-                    if (drafts) {
-                        draft_count = parseInt(drafts.innerHTML.match(/\d+/));
-                        if (Number.isInteger(draft_count) && draft_count > 0) {
-                            $('.li-user-info .user-avatar, .player-profile').prepend('<span class="draft-indicator"><a href="/my/fieldnotes.aspx" title="Go to Drafts">' + draft_count + '</a></span>');
-                        }
-                    }
-                });
-            } catch(e) {gclh_error("Show draft indicator in header",e);}
-        }
-    }
-// xxxx HEADER END!!!
 
 // Collection of css for cache listings.
     if (is_page("cache_listing")) {
