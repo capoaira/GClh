@@ -1440,6 +1440,8 @@ var mainGC = function() {
                     css += '#gc-header .gc-menu a:focus, #gc-header .gc-menu button:focus {border: none;}'; // ... remove focus style
                     // Search field.
                     css += '#gclh_searchfield {margin-left: 32px !important}';
+                    css += '#navi_search {height: inherit; margin-bottom: -1px; padding: 1px; color: #4a4a4a; font-weight: bold; font-family: sans-serif; border-radius: 7px;}';
+                    css += '#navi_search:focus, #navi_search:focus-visible, #navi_search:active {outline: none; box-shadow: none;}';
                     appendCssStyle(css);
             
                     // Change the Dropdown.
@@ -1533,7 +1535,7 @@ var mainGC = function() {
                             code += "  else document.location.href = '/seek/nearest.aspx?navi_search='+search;";
                             code += "}";
                             injectPageScript(code, "body");
-                            var searchfield = "<li id='gclh_searchfield'><input onKeyDown='if (event.keyCode==13 && event.ctrlKey == false && event.altKey == false && event.shiftKey == false) {gclh_search_logs(); return false;}' type='text' size='7' name='navi_search' id='navi_search' style='margin-bottom: -1px; padding: 1px; font-weight: bold; font-family: sans-serif; border-radius: 7px 7px 7px 7px;' value='" + settings_bookmarks_search_default + "'></li>";
+                            var searchfield = "<li id='gclh_searchfield'><input onKeyDown='if (event.keyCode==13 && event.ctrlKey == false && event.altKey == false && event.shiftKey == false) {gclh_search_logs(); return false;}' type='text' size='7' name='navi_search' id='navi_search' value='" + settings_bookmarks_search_default + "'></li>";
                             $('.gc-menu').append(searchfield);
                         }
         
@@ -1648,8 +1650,6 @@ var mainGC = function() {
                     // Schriftfarbe Menü.
                     ".#m li a, .#m li a:link, .#m li a:visited, .#m li {color: #" + font_color_menu + " !important;}" +
                     ".#m li a:hover, .#m li a:focus {color: #FFFFFF !important; outline: unset !important;}" +
-                    // Schriftfarbe Search Field.
-                    "#navi_search {color: #4a4a4a;} #navi_search:focus, #navi_search:focus-visible, #navi_search:active {outline: none; box-shadow: none;}" +
                     // Submenü im Vordergrund.
                     ".#m .#sm {z-index: 1001;}" +
                     // Schriftfarbe Untermenü.
