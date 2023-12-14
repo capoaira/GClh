@@ -10218,6 +10218,17 @@ var mainGC = function() {
                     });
                 });
             }
+            const buildGClhMapSettings = () => {
+                if ($('#map-settings')[0]) {
+                    let settings = `
+                        <h1>GClh Options</h1>
+                        <div id="gclh_corrected_coords" class="gclh_map_option"><div class="gclh_toggle-handle"><span>Show found caches at corrected coordinates</span></div>
+                        <div id="gclh_hide_dnf" class="gclh_map_option"><div class="gclh_toggle-handle"><span>Show Cache Type instead of DNF smiley</span></div>
+                    `;
+                    $('#map-settings').append(settings);
+                    // Bind Event Listener
+                }
+            }
 
             // Add layer control.
             if (settings_use_gclh_layercontrol && settings_use_gclh_layercontrol_on_search_map) {
@@ -11121,6 +11132,7 @@ var mainGC = function() {
                 buildMapControlButtons();
                 setFilter();
                 geocacheActionBar(); // "Save as PQ" and "Hide Header".
+                buildGClhMapSettings();
                 // Prepare keydown F2 and Ctrl+s in filter screen.
                 prepareKeydownF2InFilterScreen();
             }
@@ -11381,6 +11393,8 @@ var mainGC = function() {
                 css += '.existing-list .gc-button:focus {box-shadow: none;}';
                 css += '.existing-list .gc-button {height: 22px;}';
             }
+            // GClh Map Settings
+            css += '.gclh_map_option {white-space: nowrap; display: flex; gap: 1em;}'
             appendCssStyle(css);
         } catch(e) {gclh_error("Improve Search Map",e);}
     }
