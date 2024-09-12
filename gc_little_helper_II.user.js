@@ -10095,6 +10095,21 @@ var mainGC = function() {
 // Improve Search Map, improve new map.
     if (is_page('searchmap')) {
         try {
+            var mapSettingsInit = false;
+            var mapSettings = {
+                showCorrectedCoords: {
+                    isActive: getValue('showCorrectedCoords', false),
+                    reset: false,
+                    featName: 'postedCoordinates',
+                    saveNaem: 'postedCoordinatesSave',
+                },
+                hideDNF: {
+                    isActive: getValue('hideDNF', settings_map_hide_dnfs),
+                    reset: false,
+                    featName: 'userDidNotFind',
+                    saveNaem: 'userDidNotFindSave',
+                },
+            }
             // Map control and display of found caches at corrected coordinates.
             if ((settings_use_gclh_layercontrol && settings_use_gclh_layercontrol_on_search_map) || settings_show_found_caches_at_corrected_coords_but) {
                 unsafeWindow.MapSettings = { 'Map': null };
@@ -10141,14 +10156,22 @@ var mainGC = function() {
             }
             // Process cache data.
             const processCaches = (state) => {
+                setting = mapSettings.hideDNF;
+                featName = setting.featName;
+                saveName = setting.saveName;
+                if (!mapSettingsInit) {
+                    if (featName == 'userDidNotFind') {
+                        state[0][saveName] = !setting.isActive;
+                    }
+                }
                 // Ensure that last selected cache marker is reset to original coords.
-                if (!isActive && state[0].postedCoordinatesSave) {
-                    state[0].postedCoordinates = state[0].postedCoordinatesSave;
-                    delete state[0].postedCoordinatesSave;
+                if (!setting.isActive && state[0][saveName]) {
+                    state[0][featName] = state[0][saveName];
+                    delete state[0][saveName];
                     return;
                 }
                 // Nothing to be done.
-                if (!isActive && !resetToPostedCoords) return;
+                if (!setting.isActive && !setting.reset) return;
 
                 // Move caches to corrected position or reset to original coords.
                 if (state[0].results && state[0].results[0]) {
@@ -10159,64 +10182,58 @@ var mainGC = function() {
                         // If cache has corrected coords, process it.
                         if (gc.userCorrectedCoordinates) {
                             // Reset to original coords.
-                            if (resetToPostedCoords) {
-                                gc.postedCoordinates = gc.postedCoordinatesSave;
-                                delete gc.postedCoordinatesSave;
+                            if (setting.reset) {
+                                gc[featName] = gc[saveName];
+                                delete gc[saveName];
                                 continue;
                             }
-                            if (gc.postedCoordinatesSave) {
+                            if (gc[saveName]) {
                                 // If coords are already corrected we're finished.
                                 return;
                             } else {
                                 // Store original coords for reset.
-                                gc.postedCoordinatesSave = gc.postedCoordinates;
+                                gc[saveName] = gc[featName];
                             }
                             // Set corrected coords.
-                            gc.postedCoordinates = gc.userCorrectedCoordinates;
+                            gc[featName] = gc.userCorrectedCoordinates;
                         }
                     }
-                    if (resetToPostedCoords) resetToPostedCoords = false;
+                    if (setting.reset) setting.reset = false;
                     return;
                 }
                 // Keep selected cache marker at corrected position (otherwise it jumps to original coords).
-                if (state[0].userCorrectedCoordinates && !state[0].postedCoordinatesSave) {
-                    state[0].postedCoordinatesSave = state[0].postedCoordinates;
-                    state[0].postedCoordinates = state[0].userCorrectedCoordinates;
+                if (state[0].userCorrectedCoordinates && !state[0][saveName]) {
+                    state[0][saveName] = state[0][featName];
+                    state[0][featName] = state[0].userCorrectedCoordinates;
                 }
             }
-            // Button for corrected coordinates.
-            const addCorrectedCoordsButton = () => {
-                waitForElementThenRun(".map-setting-controls", () => {
-                    // Clear current map instance to get a new one automatically.
-                    unsafeWindow.MapSettings.Map = null;
-                    // Add button, but only once.
-                    if ($("#gclh_corrected_coords")[0]) return;
-                    const li =
-                        '<li role="menuitem">' +
-                        '<button id="gclh_corrected_coords" class="map-control" title="Show caches at corrected coordinates">' +
-                        '<svg aria-hidden="true" style="width:20px;height: 20px;"><use xlink:href="#pencil"></use></svg>' +
-                        '</button>' +
-                        '</li>';
-                    $('.map-setting-controls>ul').prepend(li);
-                    // When changing map layers preserve current button state.
-                    if (isActive) {
-                        $('#gclh_corrected_coords').prop('title', 'Show found caches at original coordinates').css('background-color', 'rgb(230, 247, 239)');
-                    }
-                    // Toggle button for corrected coordinates.
-                    $("#gclh_corrected_coords").bind("click", () => {
-                        if (!isActive) {
-                            isActive = true;
-                            setValue('showCorrectedCoords', isActive);
-                            $('#gclh_corrected_coords').prop('title', 'Show found caches at original coordinates').css('background-color', 'rgb(230, 247, 239)');
-                        } else {
-                            isActive = false;
-                            setValue('showCorrectedCoords', isActive);
-                            resetToPostedCoords = true;
-                            $('#gclh_corrected_coords').prop('title', 'Show found caches at corrected coordinates').css('background-color', 'rgb(255, 255, 255)');
-                        }
-                        redrawMap();
-                    });
-                });
+
+            const buildGClhMapSettings = () => {
+                if ($('#map-settings:not(.gclh_options)')[0]) {
+                    $('#map-settings').addClass('.gclh_options');
+                    let settings = `
+                        <h1>GClh Options</h1>
+                        <div id="gclh_showCorrectedCoords" class="gclh_map_option"><div class="gclh_toggle-handle"></div><span>Show found caches at corrected coordinates</span></div>
+                        <div id="gclh_hideDNF" class="gclh_map_option"><div class="gclh_toggle-handle ${mapSettings.hideDNF.isActive && 'on'}"></div><span>Show Cache Type instead of DNF smiley</span></div>
+                    `;
+                    $('#map-settings').append(settings);
+                    // Bind Event Listener
+                    $('.gclh_map_option').bind('click', toggelMapSetting);
+                }
+            }
+            const toggelMapSetting = e => {
+                // Get the correct setting
+                let toggle = e.currentTarget;
+                // Get the name
+                let name = toggle.id.split('_')[1];
+                // Toggle the setting
+                let $toggle = $(toggle).find('.gclh_toggle-handle');
+                $toggle.toggleClass('on');
+                mapSettings[name].isActive = $toggle.hasClass('on')
+                setValue(name, mapSettings[name].isActive);
+                if (!getValue(name)) mapSettings[name].reset = true;
+                // Redraw
+                redrawMap();
             }
             const buildGClhMapSettings = () => {
                 if ($('#map-settings')[0]) {
@@ -10233,44 +10250,6 @@ var mainGC = function() {
             // Add layer control.
             if (settings_use_gclh_layercontrol && settings_use_gclh_layercontrol_on_search_map) {
                 addLayersOnMap();
-            }
-            // Add button to toggle display of found caches between original and corrected coordinates.
-            if (settings_show_found_caches_at_corrected_coords_but) {
-                var isActive = getValue('showCorrectedCoords', false);
-                var resetToPostedCoords = false;
-                addCorrectedCoordsButton();
-            }
-            // Re-add corrected coordinates button when necessary.
-            // (For GS layer control, a map layer change between Leaflet maps removes all control buttons whereas GM keeps them.)
-            if (settings_show_found_caches_at_corrected_coords_but && !settings_use_gclh_layercontrol && !settings_use_gclh_layercontrol_on_search_map) {
-                waitForElementThenRun('button.layer-control', () => {
-                    const addClickEventToLayerControl = () => {
-                        // On click to layer control start observing as long as layer control is open.
-                        $('button.layer-control').bind('click', function clickFunc() {
-                            const cb = (_, observer) => {
-                                // As soon as layer control is closed add the button and stop observing.
-                                if (!$('button.layer-control.is-open')[0]) {
-                                    addCorrectedCoordsButton();
-                                    observer.disconnect();
-                                    // Remove click event from (possibly deleted) layer control.
-                                    $('button.layer-control').unbind('click', clickFunc);
-                                    // Re-add click event to (possibly new) layer control.
-                                    setTimeout(() => {
-                                        addClickEventToLayerControl();
-                                    }, 2000);
-                                }
-                            }
-                            const target = $('.map-controls')[0];
-                            const config = {
-                                childList: true,
-                                subtree: true
-                            };
-                            const observer = new MutationObserver(cb);
-                            observer.observe(target, config);
-                        });
-                    }
-                    addClickEventToLayerControl();
-                });
             }
 
             // After go back from cache details to cache list, scroll to last position.
@@ -11394,7 +11373,7 @@ var mainGC = function() {
                 css += '.existing-list .gc-button {height: 22px;}';
             }
             // GClh Map Settings
-            css += '.gclh_map_option {white-space: nowrap; display: flex; gap: 1em;}'
+            css += '.gclh_map_option {white-space: nowrap; display: flex; gap: 1em; margin-bottom: .5em;}'
             appendCssStyle(css);
         } catch(e) {gclh_error("Improve Search Map",e);}
     }
