@@ -11341,8 +11341,9 @@ var mainGC = function() {
                 // GS experimental features.
                 const pageProps = unsafeWindow.__NEXT_DATA__?.props?.pageProps;
                 if (pageProps && typeof isEnabledHiddenCacheLocationOnMap === 'undefined') {
-                    isEnabledHiddenCacheLocationOnMap = pageProps.activeExperimentalFeatures.includes("hiddenCacheLocationOnMap");
-                    if (pageProps.activeExperimentalFeatures.includes("cachesAlongARoute")) {
+                    const activeExperimentalFeatures = pageProps.activeExperimentalFeatures || [];
+                    isEnabledHiddenCacheLocationOnMap = activeExperimentalFeatures.includes("hiddenCacheLocationOnMap");
+                    if (activeExperimentalFeatures.includes("cachesAlongARoute")) {
                         handleDisplayOptionsButtonOnRouteCreation();
                     }
                 }
